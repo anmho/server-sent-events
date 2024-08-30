@@ -3,10 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/anmho/prism/api"
 	"github.com/anmho/prism/scope"
-	"github.com/joho/godotenv"
+	"github.com/caarlos0/env/v11"
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/labstack/echo/v4"
+	"log"
 	"log/slog"
 	"net/http"
 )
@@ -15,21 +16,21 @@ const (
 	port = 8080
 )
 
+type Config struct {
+	OpenAIKey string `env:"OPENAI_KEY"`
+}
+
 func main() {
-	godotenv.Load(".env")
-	mux := echo.New()
+	var config Config
 
-	mux.HTTPErrorHandler = func(err error, c echo.Context) {
-		scope.GetLogger().Error("error: ", slog.Any("error", err))
+	err := env.Parse(&config)
+	if err != nil {
+		log.Fatalln(err)
 	}
-	mux.GET("/hello", func(c echo.Context) error {
 
-		msg := "hello"
+	fmt.Printf("config: %+v", config)
 
-		return c.JSON(http.StatusOK, map[string]any{
-			"message": "hello",
-		})
-	})
+	mux := api.MakeServer()
 
 	srv := http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
